@@ -4,46 +4,42 @@ Link: https://open.kattis.com/problems/rockscissorspaper
 """
 import sys
 
-def win(source, target):
-    return source == 'P' and target == 'R' or source == 'R' and target == 'S' or source == 'S' and target == 'P'
-
 if __name__ == "__main__":
     for t in range(int(sys.stdin.readline())):
         rows, columns, days = [int(n) for n in sys.stdin.readline().split()]
 
         # Board creation
-        board = []
+        board = ''
         for r in range(rows):
-            board.append(sys.stdin.readline().strip())
+            board += sys.stdin.readline().strip()
 
-        board_updated = []
+        board_updated = ''
         # Update the whole board
         for day in range(days):
 
             # Update each cell comparing it with its siblings
-            for x, row in enumerate(board):
-                board_updated.append('')
-                for y, cell in enumerate(row):
-                    if x > 0 and win(board[x-1][y], cell):
-                        board_updated[-1] += board[x-1][y]
-                        continue
+            for position, value in enumerate(board):
+                siblings = ''
+                # Top
+                siblings += board[position-columns] if position >= columns else ''
+                # Bottom
+                siblings += board[position+columns] if position < (columns*(rows-1)) else ''
+                # Left
+                siblings += board[position-1] if position % columns != 0 else ''
+                # Right
+                siblings += board[position+1] if position % columns != (columns-1) else ''
 
-                    if x < rows-1 and win(board[x+1][y], cell):
-                        board_updated[-1] += board[x+1][y]
-                        continue
+                if value == 'P' and 'S' in siblings:
+                    board_updated += 'S'
+                elif value == 'S' and 'R' in siblings:
+                    board_updated += 'R'
+                elif value == 'R' and 'P' in siblings:
+                    board_updated += 'P'
+                else:
+                    board_updated += value
 
-                    if y > 0 and win(board[x][y-1], cell):
-                        board_updated[-1] += board[x][y-1]
-                        continue
+            board = board_updated
+            board_updated = ''
 
-                    if y < columns-1 and win(board[x][y+1], cell):
-                        board_updated[-1] += board[x][y+1]
-                        continue
-
-                    board_updated[-1] += cell
-
-            board = board_updated[:]
-            board_updated = []
-
-        for row in board:
-            print row
+        for n in range(rows):
+            print board[n*columns:n*columns+columns]
