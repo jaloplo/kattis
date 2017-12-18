@@ -3,43 +3,82 @@ Solution to the problem Rock, Scissors, Paper in Kattis web page.
 Link: https://open.kattis.com/problems/rockscissorspaper
 """
 import sys
+import time
+
+TOP = 0
+BOTTOM = 1
+LEFT = 2
+RIGHT = 3
+
+P = 2
+R = 3
+S = 5
+
+def get_source():
+    """Set the source as a file readed from the console or
+    the user input."""
+    if len(sys.argv) > 1:
+        return open(sys.argv[1])
+    else:
+        return sys.stdin
+
+def transform(character):
+    return P if character == 'P' else R if character == 'R' else S
+
+def resolve(value):
+    return 'P' if value == P else 'S' if value == S else 'R'
 
 if __name__ == "__main__":
-    for t in range(int(sys.stdin.readline())):
-        rows, columns, days = [int(n) for n in sys.stdin.readline().split()]
+    #start_time = time.time()
+    source = get_source()
+    for t in range(int(source.readline())):
+        rows, columns, days = [int(n) for n in source.readline().split()]
 
         # Board creation
-        board = ''
+        board = [[]]
         for r in range(rows):
-            board += sys.stdin.readline().strip()
+            for c in source.readline().strip():
+                board[-1].append(transform(c))
 
-        board_updated = ''
+        siblings = []
+        # Calculate siblings
+        for position, value in enumerate(board[-1]):
+            siblings.append([])
+            # Top
+            siblings[position].append(position-columns if position >= columns else position)
+            # Bottom
+            siblings[position].append(position+columns if position < columns*(rows-1) else position)
+            # Left
+            siblings[position].append(position-1 if position % columns != 0 else position)
+            # Right
+            siblings[position].append(position+1 if position % columns != columns-1 else position)
+
+        #process_time = time.time()
         # Update the whole board
         for day in range(days):
+            board.append([])
 
             # Update each cell comparing it with its siblings
-            for position, value in enumerate(board):
-                siblings = ''
-                # Top
-                siblings += board[position-columns] if position >= columns else ''
-                # Bottom
-                siblings += board[position+columns] if position < (columns*(rows-1)) else ''
-                # Left
-                siblings += board[position-1] if position % columns != 0 else ''
-                # Right
-                siblings += board[position+1] if position % columns != (columns-1) else ''
+            for position, value in enumerate(board[-2]):
+                s = 1
+                s *= board[-2][siblings[position][TOP]]
+                s *= board[-2][siblings[position][BOTTOM]]
+                s *= board[-2][siblings[position][LEFT]]
+                s *= board[-2][siblings[position][RIGHT]]
 
-                if value == 'P' and 'S' in siblings:
-                    board_updated += 'S'
-                elif value == 'S' and 'R' in siblings:
-                    board_updated += 'R'
-                elif value == 'R' and 'P' in siblings:
-                    board_updated += 'P'
+                if value == P and s % S == 0:
+                    board[-1].append(S)
+                elif value == S and s % R == 0:
+                    board[-1].append(R)
+                elif value == R and s % P == 0:
+                    board[-1].append(P)
                 else:
-                    board_updated += value
+                    board[-1].append(value)
 
-            board = board_updated
-            board_updated = ''
+        #print 'Process time: %s' % (time.time() - process_time)
 
+        solution = ''.join([resolve(i) for i in board[-1]])
         for n in range(rows):
-            print board[n*columns:n*columns+columns]
+            print solution[n*columns:n*columns+columns]
+
+    #print 'Time: %s' % (time.time() - start_time)
